@@ -135,4 +135,4 @@ dmypy.json
 
 
 # some testing files
-.exe
+*.exe
