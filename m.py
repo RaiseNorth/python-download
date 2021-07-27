@@ -1,4 +1,5 @@
 from __future__ import annotations
+from os import name
 # 用于显示进度条
 from tqdm import tqdm
 # 用于发起网络请求
@@ -9,13 +10,13 @@ import signal
 # 导入 retry 库以方便进行下载出错重试
 from retry import retry
 
+from pathlib import Path  # 判断文件和目录
 
+import sys  # 系统库，用于处理命令行参数
+from icecream import ic  # 用于调试
 
-import sys #系统库，用于处理命令行参数
-from icecream import ic#用于调试
-
-#关闭调试信息输出
-#ic.disable
+# 关闭调试信息输出
+# ic.disable
 
 signal.signal(signal.SIGINT, multitasking.killall)
 
@@ -114,7 +115,8 @@ def download(url: str, file_name: str, retry_times: int = 3, each_size=16*MB) ->
     parts = split(0, file_size, each_size)
     print(f'分块数：{len(parts)}')
     # 创建进度条
-    bar = tqdm(total=file_size, desc=f'下载文件：{file_name}',unit='B',unit_scale=True,unit_divisor=2**10)
+    bar = tqdm(total=file_size, desc=f'下载文件：{file_name}',
+               unit='B', unit_scale=True, unit_divisor=2**10)
     for part in parts:
         start, end = part
         start_download(start, end)
@@ -124,10 +126,28 @@ def download(url: str, file_name: str, retry_times: int = 3, each_size=16*MB) ->
     bar.close()
 
 
+def SolveTheSameName(name: str, path='.\\'):
+    if Path(path+name).is_file() == False:
+        return name
+    nameid = 1
+    if len(name.split('.')) == 1:  # 这种情况是没有扩展名的情况
+        while Path(path+name+'_'+str(nameid)).is_file():
+            nameid += 1
+        return name+'_'+str(nameid)
+    if len(name.split('.')) >= 2:  # 这种是有扩展名的情况，很可能名字中还带点
+        nameb = name.split('.')[-1]  # 这个是扩展名
+        namea = name[0:len(name)-len(nameb)-1]
+        while Path(path+namea+'_'+str(nameid)+'.'+nameb).is_file():
+            nameid += 1
+        return namea+'_'+str(nameid)+'.'+nameb
+
+
 if "__main__" == __name__:
-    
-    url='https://dl.softmgr.qq.com/original/im/QQ9.4.9.27849.exe'
-    file_name=url.split('/')[-1]
+
+    url = 'https://dl.softmgr.qq.com/original/im/QQ9.4.9.27849.exe'
+    file_name = url.split('/')[-1]
+    file_name = SolveTheSameName(name=file_name)
+
     ic(url)
     ic(file_name)
     # 开始下载文件
